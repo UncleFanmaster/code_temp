@@ -1,0 +1,51 @@
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+'''
+功能：用皮尔逊相关系数对特征进行筛选
+输入：特征列input_feature，标签列input_label（两者类型都是DataFrame）
+      和筛选特征数目num（小于输入的特征列列数，默认值为特征列列数）、
+      显著性r的临界值r_crisis（默认值为0.1）以及皮尔逊系数临界值p_crisis（默认值为0.5）
+输出：满足显著性r的临界值和皮尔逊相关系数临界值且小于等于num的特征列     
+作者：冯帆
+日期：20210316
+'''
+
+
+def feature_pearson_select(input_feature, input_label, num=None, r_crisis=0.1, p_crisis=0.5):
+    try:
+        if num is None:
+            num = input_feature.shape[1]
+        else:
+            pass
+        if input_feature.shape[0] != input_label.shape[0]:
+            print('错误：请确保输入的特征列和标签列的行数一致（样本数和标签数相同，可以一一对应）')
+            return 0
+        else:
+            data = pd.concat([input_feature, input_label], axis=1)
+        # 获取各个特征与标签列的皮尔逊相关系数
+        corr = data.corr(method='pearson', min_periods=0.03)
+        print(corr)
+        # 对获取的皮尔逊相关系数矩阵取绝对值
+        corr = corr.abs()
+        # 获取每个特征和标签值的皮尔逊相关系数值
+        corr = corr.iloc[:-1, -1]
+        # 对所有皮尔逊相关系数按值进行排序
+        corr = corr.sort_values()
+        print(corr)
+        index_fault = corr[corr[0] >= p_crisis]
+        print(index_fault)
+
+
+    except NameError:
+        print('请确保已输入特征列和标签列')
+
+    return 0
+
+
+
+if __name__ == '__main__':
+    data = pd.DataFrame([[0.5, 0.6, 0.3], [0.4, 0.4, 0.6], [0.6, 0.4, 0.2], [0.3, 0.3, 0.5], [0.6, 0.7, 0.4], [0.2, 0.2, 0.3], [0.7, 0.5, 0.4], [0.5, 0.6, 0.7]])
+    data.columns = ['a', 'b', 'c']
+    feature_pearson_select(input_feature=data[['a', 'b']], input_label=data[['c']])
